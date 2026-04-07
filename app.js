@@ -11,7 +11,7 @@ const app = express();
 const mongoose = require("mongoose"); 
 const path = require("path");
 const methodOverride = require("method-override");
-// const wrapAsync = require("./utils/wrapAsync");
+const wrapAsync = require("./utils/wrapAsync");
 const ejsMate = require("ejs-mate");
 const session = require("express-session");
 const MongoStore = require("connect-mongo").default;
@@ -21,16 +21,18 @@ const flash = require("connect-flash");
 const passport = require("passport");
 const LocalStrategy = require("passport-local");
 const User = require("./models/user");
+const Listing = require("./models/listing");
 
 const ExpressError = require("./utils/ExpressError");  
 const listingRoutes = require("./routes/listing");
 const reviewRoutes = require("./routes/review");
 const userRoutes = require("./routes/user");
 
-// let url = "mongodb://127.0.0.1:27017/airbnb";
-let mongoDBUrl = process.env.ATLASDB_URL;
+let url = "mongodb://127.0.0.1:27017/airbnb";
+// let mongoDBUrl = process.env.ATLASDB_URL;
+// let mongoDBUrl = process.env.ATLASDB_URL;
 mongoose
-  .connect(mongoDBUrl)
+  .connect(url)
   .then(() => {
     console.log("DB connected");
   })
@@ -39,7 +41,7 @@ mongoose
   });
 
 const store = MongoStore.create({
-  mongoUrl: mongoDBUrl,
+  mongoUrl: url,
   crypto: {
     secret: process.env.SECRET,  
   },
@@ -67,8 +69,6 @@ const sessionOptions = {
 // app.get("/", (req, res) => {
 //   res.send("Hi, I am root");
 // });
-
-
 
 app.use(session(sessionOptions));
 app.use(flash());
@@ -109,6 +109,15 @@ app.use(express.urlencoded({ extended: true }));
 app.use(methodOverride("_method"));
 app.engine("ejs", ejsMate);
 app.use(express.static(path.join(__dirname, "public")));
+
+app.get('/', wrapAsync(async (req, res) => {
+  const featuredListings = await Listing.find({}).limit(6).exec();
+  res.render('home', {
+    title: 'Wanderlust | Find your next adventure',
+    featuredListings,
+  });
+}));
+
 app.use("/listings", listingRoutes);
 app.use("/listings/:id/reviews", reviewRoutes);
 app.use("/", userRoutes);

@@ -20,7 +20,9 @@
       <div class="card-body">
         <p class="card-text">
           <!-- <i> : <%= listing.owner %> </i> -->
-          <i> Owned by : <%= listing.owner.username %> </i>
+          <i>
+            Owned by : <%= listing.owner ? listing.owner.username : 'Unknown host' %>
+          </i>
 
           <br />
           <%= listing.description %>
@@ -38,7 +40,7 @@
     </div>
     <br />
 
-    <% if(currentUser && currentUser._id.equals(listing.owner._id)) { %>
+    <% if (currentUser && listing.owner && currentUser._id.equals(listing.owner._id)) { %>
 
     <div class="btns">
       <a
@@ -145,12 +147,14 @@
               ></p>
               <p class="card-text text-secondary"><%= review.comment %></p>
             </div>
+            <% if (currentUser && review.author && currentUser._id.equals(review.author._id)) { %>
             <form
               action="/listings/<%= listing._id %>/reviews/<%= review._id%>/?_method=DELETE"
               method="post"
             >
               <button class="btn btn-sm btn-dark my-2">Delete</button>
             </form>
+            <% } %>
           </div>
         </div>
           <% } %>
